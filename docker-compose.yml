@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: automotive-hub-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-automotive_hub}
+      POSTGRES_USER: ${DB_USERNAME:-automotive}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdev-change-me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - automotive_hub_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+    container_name: automotive-hub-api
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-automotive_hub}
+      DB_USERNAME: ${DB_USERNAME:-automotive}
+      DB_PASSWORD: ${DB_PASSWORD:-localdev-change-me}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+    container_name: automotive-hub-web
+    ports:
+      - "${WEB_PORT:-4200}:80"
+    depends_on:
+      - api
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    profiles: ["mail"]
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  automotive_hub_pgdata:

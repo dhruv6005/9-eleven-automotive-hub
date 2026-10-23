@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+# Lightweight Maven bootstrap wrapper; downloads Maven into the user's home directory on first run.
+set -eu
+MAVEN_VERSION="3.9.11"
+MAVEN_HOME_DIR="${MAVEN_HOME:-${HOME}/.m2/wrapper/dists/apache-maven-${MAVEN_VERSION}}"
+if [ -x "$MAVEN_HOME_DIR/bin/mvn" ]; then
+  exec "$MAVEN_HOME_DIR/bin/mvn" "$@"
+fi
+command -v curl >/dev/null 2>&1 || { echo "curl is required to bootstrap Maven." >&2; exit 1; }
+command -v unzip >/dev/null 2>&1 || { echo "unzip is required to bootstrap Maven." >&2; exit 1; }
+mkdir -p "$(dirname "$MAVEN_HOME_DIR")"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
+ARCHIVE="$TMP_DIR/apache-maven-${MAVEN_VERSION}-bin.zip"
+URL="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.zip"
+echo "Downloading Maven ${MAVEN_VERSION} (first run only)..."
+curl -fsSL --retry 3 "$URL" -o "$ARCHIVE"
+unzip -q "$ARCHIVE" -d "$TMP_DIR"
+rm -rf "$MAVEN_HOME_DIR"
+mv "$TMP_DIR/apache-maven-${MAVEN_VERSION}" "$MAVEN_HOME_DIR"
+exec "$MAVEN_HOME_DIR/bin/mvn" "$@"
