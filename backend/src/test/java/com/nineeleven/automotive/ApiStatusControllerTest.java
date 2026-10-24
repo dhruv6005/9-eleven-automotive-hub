@@ -9,8 +9,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
+import com.nineeleven.automotive.config.SecurityConfiguration;
 
 @WebMvcTest(ApiStatusController.class)
+@Import(SecurityConfiguration.class)
+@TestPropertySource(properties = {
+        "app.security.jwt-secret=test-only-secret-that-is-at-least-thirty-two-bytes",
+        "app.frontend-origin=http://localhost:4200"
+})
 class ApiStatusControllerTest {
     @Autowired
     private MockMvc mockMvc;

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './core/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
           <a href="#contact">Contact</a>
         </nav>
         <div class="header-actions">
-          <a class="portal-link" routerLink="/portal">My vehicle</a>
+          <a class="portal-link" [routerLink]="auth.role() ? auth.homeForRole() : '/portal'">My vehicle</a>
+          @if (!auth.role()) { <a class="portal-link sign-in-link" routerLink="/login">Sign in</a> }
           <a class="header-cta" href="#contact">Book a visit <span aria-hidden="true">↗</span></a>
         </div>
       </header>
@@ -27,11 +29,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       <footer class="site-footer">
         <div class="footer-brand"><span class="brand-mark">9<span>/</span>11</span><span>Precision care. Every drive.</span></div>
         <span>© {{ currentYear }} 9-Eleven Automotive Hub</span>
-        <a routerLink="/admin">Workshop admin preview</a>
+        @if (auth.role() === 'ADMIN') { <a routerLink="/admin">Workshop admin</a> }
       </footer>
     </div>
   `,
 })
 export class AppComponent {
+  readonly auth = inject(AuthService);
   readonly currentYear = new Date().getFullYear();
+  constructor() { void this.auth.initialize(); }
 }

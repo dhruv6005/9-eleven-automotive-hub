@@ -7,6 +7,7 @@ erDiagram
     USERS ||--o| CUSTOMER_PROFILES : has
     USERS ||--o{ REFRESH_TOKENS : owns
     USERS ||--o{ PASSWORD_RESET_TOKENS : resets
+    USERS ||--o{ EMAIL_VERIFICATION_TOKENS : verifies
     USERS ||--o{ NOTIFICATIONS : receives
     USERS ||--o{ AUDIT_LOG : performs
     CUSTOMER_PROFILES ||--o{ VEHICLES : owns
@@ -37,6 +38,9 @@ erDiagram
         string role
         string status
         boolean email_verified
+        int failed_login_attempts
+        datetime locked_until
+        boolean force_password_change
     }
     CUSTOMER_PROFILES {
         uuid user_id PK,FK
@@ -170,9 +174,17 @@ erDiagram
     REFRESH_TOKENS {
         uuid id PK
         uuid user_id FK
+        uuid family_id
         string token_hash
         datetime expires_at
         datetime revoked_at
+    }
+    EMAIL_VERIFICATION_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        string token_hash UK
+        datetime expires_at
+        datetime consumed_at
     }
     PASSWORD_RESET_TOKENS {
         uuid id PK
@@ -212,4 +224,6 @@ erDiagram
 - `job_status_history(job_id, changed_at DESC)`.
 - `job_stage_weights(job_id, stage_order)` for ordered, per-job progress weights; progress is derived from completed stages.
 - `job_number_seq` provides a sequential counter for human-friendly job numbers.
+- Refresh tokens are indexed by user/expiry and family; each bearer token is stored as a SHA-256 hash, with rotation/revocation state and replacement linkage.
+- Password reset and email verification token hashes are unique and indexed by user/expiry.
 - Supporting indexes cover job queues, service catalog lookups, customer notifications, enquiry triage, invoice lines and audit history.

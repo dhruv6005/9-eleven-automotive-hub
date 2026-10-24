@@ -1,0 +1,8 @@
+app:
+  security:
+    jwt-secret: test-only-secret-that-is-at-least-thirty-two-bytes
+  frontend-origin: http://localhost:4200
+  frontend-url: http://localhost:4200
+  admin:
+    email: ""
+    initial-password: ""

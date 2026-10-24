@@ -3,8 +3,8 @@
 ## Start
 
 1. Install Docker Desktop / Docker Engine with Compose v2.
-2. Copy `.env.example` to `.env`; keep these values local only.
-3. Run `docker compose up --build` from the repository root.
+2. Copy `.env.example` to `.env` or add the new Phase 2 variables to an existing `.env`; replace `APP_JWT_SECRET` with a random value of at least 32 bytes, keep `TRUSTED_PROXY_ADDRESSES` aligned with the web container address on the Compose network, and configure both admin seed values or leave both blank. Keep these values local only.
+3. Run `docker compose --profile mail up --build` from the repository root to enable MailHog.
 4. Visit the site at `http://localhost:4200` and the API status at `http://localhost:8080/api/v1/system/status`.
 
 ## Stop and reset
@@ -12,7 +12,8 @@
 - Stop containers: `docker compose down`.
 - Stop and delete the local database volume: `docker compose down -v`. This deletes local data.
 - View service logs: `docker compose logs -f api` or `docker compose logs -f postgres`.
-- Start MailHog with `docker compose --profile mail up --build` when email delivery is implemented.
+- View development email at `http://localhost:8025`.
+- Start the app without MailHog with `docker compose up --build`; auth mail delivery then requires a reachable SMTP service.
 
 ## Database migrations
 
@@ -25,6 +26,14 @@ Flyway runs on API startup. Add future migrations under `backend/src/main/resour
 - `GET http://localhost:8080/api-docs` returns the OpenAPI schema.
 - `http://localhost:4200` serves the Angular public-site shell.
 
-## Known phase boundary
+## Phase 2 authentication checks
 
-The `admin` and `portal` routes are static unauthenticated previews. Do not enter real customer data or use this foundation as a production workshop system before authentication, ownership checks, production secrets and operational workflows are implemented and tested.
+- Register a customer and open the verification link captured in MailHog.
+- Sign in and confirm the response contains a 15-minute access token and a `Secure; HttpOnly; SameSite=Strict` refresh cookie.
+- Refresh once and confirm the cookie rotates; attempt to reuse the previous cookie and confirm the family is revoked.
+- Confirm five failed logins lock the account temporarily, and that forgot/reset password returns a generic forgotten-password response.
+- Confirm `/portal` requires CUSTOMER and `/admin` requires ADMIN. A newly seeded admin must change the initial password before using protected routes.
+
+## Current phase boundary
+
+The `admin` and `portal` routes now require authenticated roles, but their contents are shells. Do not use the app as a production workshop system before the remaining operational workflows, ownership checks, production secrets, and deployment controls are implemented and tested.

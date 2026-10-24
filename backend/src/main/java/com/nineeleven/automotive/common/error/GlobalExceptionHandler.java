@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -39,6 +40,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid request");
         problem.setType(URI.create("https://9-eleven.example/problems/invalid-request"));
+        return problem;
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ProblemDetail handleResponseStatus(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status,
+                ex.getReason() == null ? status.getReasonPhrase() : ex.getReason());
+        problem.setTitle(status.getReasonPhrase());
+        problem.setType(URI.create("https://9-eleven.example/problems/" + status.value()));
         return problem;
     }
 

@@ -1,4 +1,6 @@
-# Phase 1 delivery status
+# Phase 1 delivery snapshot
+
+This document records the Phase 1 foundation at its original delivery point. Authentication and roles were subsequently implemented in [Phase 2](phase-2-status.md).
 
 ## Implemented in source
 
@@ -27,4 +29,4 @@ This execution environment does not have Docker or Maven installed and cannot re
 
 ## Deliberately not implemented yet
 
-Registration/login/JWT, refresh-token rotation logic, role guards, CRUD endpoints, job transitions, customer ownership checks, media upload, email notifications, approval actions, invoice PDF generation, live updates, dashboard reporting and production deployment. These remain for the subsequent phases.
+At the Phase 1 delivery point, registration/login/JWT, refresh-token rotation logic, role guards, CRUD endpoints, job transitions, customer ownership checks, media upload, email notifications, approval actions, invoice PDF generation, live updates, dashboard reporting and production deployment were not implemented. Phase 2 authentication is now tracked separately; remaining items belong to later phases.

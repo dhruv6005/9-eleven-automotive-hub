@@ -15,6 +15,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    networks:
+      automotive_hub_net:
+        ipv4_address: 172.30.0.12
 
   api:
     build:
@@ -26,11 +29,22 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-automotive_hub}
       DB_USERNAME: ${DB_USERNAME:-automotive}
       DB_PASSWORD: ${DB_PASSWORD:-localdev-change-me}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?Set APP_JWT_SECRET in .env}
+      TRUSTED_PROXY_ADDRESSES: ${TRUSTED_PROXY_ADDRESSES:-172.30.0.10}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
+      MAIL_HOST: ${MAIL_HOST:-mailhog}
+      MAIL_PORT: ${MAIL_PORT:-1025}
     ports:
       - "${API_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      automotive_hub_net:
+        ipv4_address: 172.30.0.11
 
   web:
     build:
@@ -40,6 +54,9 @@ services:
       - "${WEB_PORT:-4200}:80"
     depends_on:
       - api
+    networks:
+      automotive_hub_net:
+        ipv4_address: 172.30.0.10
 
   mailhog:
     image: mailhog/mailhog:v1.0.1
@@ -47,6 +64,16 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      automotive_hub_net:
+        ipv4_address: 172.30.0.13
 
 volumes:
   automotive_hub_pgdata:
+
+networks:
+  automotive_hub_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
