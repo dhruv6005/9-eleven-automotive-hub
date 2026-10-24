@@ -15,7 +15,8 @@ import { AuthService } from './core/auth.service';
         </a>
         <nav class="main-nav" aria-label="Main navigation">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-          <a href="#services">Services</a>
+          <a routerLink="/services" routerLinkActive="active">Services</a>
+          <a routerLink="/offers" routerLinkActive="active">Offers</a>
           <a href="#why-us">Why 9/11</a>
           <a href="#contact">Contact</a>
         </nav>

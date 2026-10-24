@@ -1,8 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { CatalogApiService } from '../catalog/catalog-api.service';
+import { Category } from '../catalog/catalog.models';
 
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [RouterLink],
   template: `
     <section class="hero-section">
       <div class="hero-grid"></div>
@@ -55,12 +59,11 @@ import { Component } from '@angular/core';
 
     <section id="services" class="section services-section">
       <div class="section-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> WHAT WE DO</div><h2>ONE HUB.<br /><span>EVERY DETAIL.</span></h2></div><p>From first wash to full transformation, our services bring together specialist care and workshop capability under one roof.</p></div>
-      <div class="service-grid">
-        <article class="service-card service-card-featured"><span class="service-number">01 / FINISH</span><div class="service-icon">✳</div><h3>Detailing &amp; Paint Correction</h3><p>Restore depth, clarity and that just-driven-out feeling.</p><a href="#contact">Explore service <span>↗</span></a></article>
-        <article class="service-card"><span class="service-number">02 / PROTECT</span><div class="service-icon">◈</div><h3>PPF &amp; Ceramic Coating</h3><p>Long-lasting defence for the finish you love.</p><a href="#contact">Explore service <span>↗</span></a></article>
-        <article class="service-card"><span class="service-number">03 / REPAIR</span><div class="service-icon">⌁</div><h3>Paint, Body &amp; Mechanical</h3><p>Workshop know-how for the jobs that keep you moving.</p><a href="#contact">Explore service <span>↗</span></a></article>
-        <article class="service-card"><span class="service-number">04 / UPGRADE</span><div class="service-icon">＋</div><h3>Accessories &amp; Custom Care</h3><p>Thoughtful upgrades, fitted with attention to detail.</p><a href="#contact">Explore service <span>↗</span></a></article>
-      </div>
+      @if (categoriesLoading()) { <p class="catalog-state" role="status">Loading service categories…</p> }
+      @else if (categoriesError()) { <p class="catalog-state" role="alert">{{categoriesError()}} <button type="button" (click)="loadCategories()">Try again</button></p> }
+      @else if (!categories().length) { <p class="catalog-state">Service categories will appear here soon.</p> }
+      @else { <div class="service-grid">@for (category of categories(); track category.id) { <article class="service-card"><span class="service-number">{{category.sortOrder + 1}} / 9/11 CARE</span><div class="service-icon">✳</div><h3>{{category.name}}</h3><p>{{category.description || 'Specialist care, delivered with attention to every detail.'}}</p><a [routerLink]="['/services']" [queryParams]="{category: category.slug}">Explore category <span>↗</span></a></article> }</div> }
+      <p class="catalog-more"><a routerLink="/services">View all services ↗</a> <a routerLink="/offers">Current offers ↗</a></p>
     </section>
 
     <section id="why-us" class="statement-section"><div class="statement-mark">“</div><div class="eyebrow"><span class="eyebrow-line"></span> THE 9/11 APPROACH</div><h2>YOUR CAR ISN’T<br />JUST <span>ANOTHER JOB.</span></h2><p>Clear updates. Considered recommendations. Quality you can see. The workshop experience should feel as good as the result.</p><div class="statement-metrics"><div><strong>01</strong><span>Transparent estimates</span></div><div><strong>02</strong><span>Progress you can follow</span></div><div><strong>03</strong><span>Care at every stage</span></div></div></section>
@@ -68,4 +71,16 @@ import { Component } from '@angular/core';
     <section id="contact" class="contact-section"><div><div class="eyebrow"><span class="eyebrow-line"></span> READY WHEN YOU ARE</div><h2>LET’S GET YOUR<br /><span>CAR RIGHT.</span></h2><p>Tell us what your car needs. Our team will help you choose the right service.</p></div><div class="contact-panel"><div class="contact-panel-top"><span>START A CONVERSATION</span><span class="live-dot"></span></div><a href="mailto:hello@9elevenautomotive.example" class="contact-action"><span>Enquire about a service</span><b>↗</b></a><a href="tel:+910000000000" class="contact-action"><span>Talk to the workshop</span><b>↗</b></a><p class="contact-note">Contact details shown here are placeholders for Phase 1. Configure the workshop’s actual details before launch.</p></div></section>
   `,
 })
-export class HomeComponent {}
+export class HomeComponent implements OnInit {
+  private readonly catalog = inject(CatalogApiService);
+  readonly categories = signal<Category[]>([]);
+  readonly categoriesLoading = signal(true);
+  readonly categoriesError = signal('');
+  ngOnInit(): void { void this.loadCategories(); }
+  async loadCategories(): Promise<void> {
+    this.categoriesLoading.set(true); this.categoriesError.set('');
+    try { this.categories.set(await this.catalog.categories()); }
+    catch { this.categoriesError.set('Service categories could not be loaded.'); }
+    finally { this.categoriesLoading.set(false); }
+  }
+}

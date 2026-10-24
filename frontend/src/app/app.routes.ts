@@ -5,6 +5,9 @@ const authPage = () => import('./features/auth/auth-page.component').then((m) =>
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./features/public/home.component').then((m) => m.HomeComponent) },
+  { path: 'services', loadComponent: () => import('./features/catalog/services-page.component').then((m) => m.ServicesPageComponent) },
+  { path: 'services/:slug', loadComponent: () => import('./features/catalog/service-detail.component').then((m) => m.ServiceDetailComponent) },
+  { path: 'offers', loadComponent: () => import('./features/catalog/offers-page.component').then((m) => m.OffersPageComponent) },
   { path: 'login', loadComponent: authPage },
   { path: 'register', loadComponent: authPage },
   { path: 'forgot-password', loadComponent: authPage },
