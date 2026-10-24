@@ -6,7 +6,7 @@ Guidance for AI coding agents working in this repository. Read this file and the
 
 9-Eleven Automotive Hub is a platform for a car detailing and workshop business covering detailing, paint and body work, PPF, coatings, mechanical work, garage and electrical work, and accessories. The intended product has a public marketing and enquiry site, an admin portal for workshop operations, and a customer portal for tracking vehicle jobs. Favor correctness, security, maintainability, and clear documentation.
 
-The supplied full project prompt defines the long-term target and phased delivery plan. Phases 1 and 2 are implemented and complete. Authentication, JWT access tokens, refresh rotation, auth rate limiting, and the environment-configured admin seeder exist. See [docs/phase-2-status.md](docs/phase-2-status.md) for implementation and verification details and [docs/api.md](docs/api.md) for the current API contract. Later-phase plans remain targets until implemented.
+The supplied full project prompt defines the long-term target and phased delivery plan. Phases 1–3 are implemented and complete. Authentication, JWT access tokens, refresh rotation, catalog pricing, and size-aware public offers exist. See [docs/phase-2-status.md](docs/phase-2-status.md), [docs/phase-3-backend-status.md](docs/phase-3-backend-status.md), [docs/phase-3-frontend-status.md](docs/phase-3-frontend-status.md), and [docs/phase-3-followup.md](docs/phase-3-followup.md) for implementation and verification details and [docs/api.md](docs/api.md) for the current API contract. Later-phase plans remain targets until implemented.
 
 ## Fixed technology choices
 
@@ -131,7 +131,7 @@ Run `npm test` from `frontend/` for the Angular Vitest suite. Do not run the des
 9. Dashboard and reporting.
 10. Hardening: security, performance, tests, docs, deployment.
 
-Phases 1 and 2 are complete. Only advance the phase the user requested. The current implementation and verification status are defined by the source, [docs/phase-2-status.md](docs/phase-2-status.md), and [docs/api.md](docs/api.md), not by this roadmap.
+Phases 1–3 are complete. Only advance the phase the user requested. The current implementation and verification status are defined by the source, the `docs/phase-*-status.md` and `docs/phase-3-followup.md` documents, and [docs/api.md](docs/api.md), not by this roadmap.
 
 ## Completion and reporting
 

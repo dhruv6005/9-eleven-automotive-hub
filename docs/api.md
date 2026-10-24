@@ -45,11 +45,12 @@ Login accepts `{ "email": "...", "password": "..." }`. Customer registration acc
 
 ## Catalog and offers (Phase 3)
 
-All public catalog reads are anonymous and return `Cache-Control: public, max-age=60`. Public list responses are paginated where appropriate. No prices are seeded; until the owner creates a matching `service_prices` row, `price` is `null` and the UI should display “Price on request.” Supply `sizeClass` to request the price for that vehicle size class. Without `sizeClass`, `price` is populated only if exactly one price row exists for the service; with multiple size classes the response is `null` to avoid showing an arbitrary class price.
+All public catalog reads are anonymous and return `Cache-Control: public, max-age=60`. Public list responses are paginated where appropriate. Service list and detail DTOs include `prices`, an array of `{ "sizeClass", "price" }` ordered SMALL, MEDIUM, LARGE, SUV, and `fromPrice`, the lowest configured price or `null`. The legacy `price` property remains `null` unless the caller explicitly supplies `sizeClass`, in which case it is that class's price or `null`. No prices are seeded. Unknown size classes return 400. Public offer DTOs include `prices`, an array of `{ "serviceId", "serviceName", "sizeClass", "price" }` with discounted amounts computed on the server for applicable services and available price rows.
 
 | Method | Path | Access | Behavior |
 |---|---|---|---|
 | `GET` | `/api/v1/public/categories` | Public | Active categories, ordered by sort order. |
+| `GET` | `/api/v1/public/vehicle-size-classes` | Public | Supported classes and labels: SMALL, MEDIUM, LARGE, SUV. |
 | `GET` | `/api/v1/public/services?category={slug}&sizeClass={class}&page=0&size=20` | Public | Active services, optionally filtered by category slug; page size is capped at 100. |
 | `GET` | `/api/v1/public/services/{slug}?sizeClass={class}` | Public | One active service or 404. |
 | `GET` | `/api/v1/public/offers` | Public | Active offers whose validity includes the current date. |
@@ -62,7 +63,7 @@ All public catalog reads are anonymous and return `Cache-Control: public, max-ag
 | `GET`, `POST` | `/api/v1/admin/offers` | ADMIN | List/create offers and their linked service IDs. |
 | `PUT`, `DELETE` | `/api/v1/admin/offers/{id}` | ADMIN | Update or soft-hide an offer (`active=false`). |
 
-Offer types are `PERCENT` (1–100) and `FLAT`. Validity dates are inclusive. A flat discount cannot exceed the applicable service price; this is enforced by the offer pricing helper when calculating a price. Offer application is restricted to its linked services unless `appliesToAll` is true. All admin routes require an ADMIN access token; anonymous callers receive 401 and CUSTOMER callers receive 403.
+Offer types are `PERCENT` (1–100) and `FLAT`. Validity dates are inclusive. A flat discount cannot exceed the applicable service price; this is enforced by the offer pricing helper when calculating a price. Offer application is restricted to its linked services unless `appliesToAll` is true. Flyway V4 applies CHECK constraints to `service_prices.vehicle_size_class` and `vehicles.size_class` only when all existing non-null values in the respective column are supported; otherwise that column's constraint is skipped. All admin routes require an ADMIN access token; anonymous callers receive 401 and CUSTOMER callers receive 403.
 
 The refresh cookie is named `refresh_token`, has `HttpOnly`, `Secure`, and `SameSite=Strict` attributes, and is scoped to `/api/v1/auth`. Send the cookie with refresh/logout calls. Access tokens are returned in the JSON response and sent as `Authorization: Bearer ...`. Do not store access tokens in local storage.
 

@@ -26,4 +26,14 @@ describe('CatalogApiService', () => {
     await expect(result).resolves.toMatchObject({ price: 12500, vehicleSizeClass: 'SUV' });
     http.verify();
   });
+
+  it('loads supported vehicle sizes from the public endpoint', async () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const api = TestBed.inject(CatalogApiService); const http = TestBed.inject(HttpTestingController);
+    const result = api.vehicleSizeClasses();
+    const req = http.expectOne(`${API_BASE_URL}/public/vehicle-size-classes`);
+    req.flush([{ sizeClass: 'SMALL', label: 'Small' }]);
+    await expect(result).resolves.toEqual([{ sizeClass: 'SMALL', label: 'Small' }]);
+    http.verify();
+  });
 });

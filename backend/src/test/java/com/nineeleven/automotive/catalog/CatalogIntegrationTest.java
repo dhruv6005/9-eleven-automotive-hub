@@ -30,7 +30,7 @@ class CatalogIntegrationTest {
     @Autowired MockMvc mvc; @Autowired JdbcTemplate jdbc; @Autowired ObjectMapper json; @Autowired UserRepository users; @Autowired AuthTokenService tokens;
     @MockBean AuthMailService mail;
     private String adminToken,customerToken;
-    @BeforeEach void prepare(){jdbc.execute("TRUNCATE TABLE users CASCADE");jdbc.execute("TRUNCATE TABLE offers CASCADE");
+    @BeforeEach void prepare(){jdbc.execute("TRUNCATE TABLE users CASCADE");jdbc.execute("TRUNCATE TABLE offers CASCADE");jdbc.execute("TRUNCATE TABLE service_prices CASCADE");jdbc.execute("update service_categories set active=true where slug='detailing'");jdbc.execute("update services set active=true where slug='exterior-wash-and-wax'");
         adminToken=token("admin@catalog.test",Role.ADMIN);customerToken=token("customer@catalog.test",Role.CUSTOMER);}
     private String token(String email,Role role){UserEntity u=new UserEntity();u.setEmail(email);u.setPasswordHash("unused");u.setRole(role);u.setStatus(UserAccountStatus.ACTIVE);u.setEmailVerified(true);u.setForcePasswordChange(false);u.setFailedLoginAttempts(0);users.saveAndFlush(u);return tokens.issueAccessToken(u);}
     @Test void publicRoutesHideInactiveAndExpiredRecords() throws Exception {
@@ -52,9 +52,36 @@ class CatalogIntegrationTest {
         String s=mvc.perform(post("/api/v1/admin/services").header("Authorization","Bearer "+adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\""+categoryId+"\",\"name\":\"Wash\",\"slug\":\"wash\",\"description\":\"Wash vehicle\",\"shortBenefit\":\"Clean finish\",\"active\":true}"))
             .andExpect(status().isCreated()).andExpect(jsonPath("$.price").value((Object)null)).andReturn().getResponse().getContentAsString();
         String serviceId=json.readTree(s).get("id").asText();
-        mvc.perform(put("/api/v1/admin/services/"+serviceId+"/prices/SEDAN").header("Authorization","Bearer "+adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"price\":1250.00}"))
+        mvc.perform(put("/api/v1/admin/services/"+serviceId+"/prices/SMALL").header("Authorization","Bearer "+adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"price\":1250.00}"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.price").value(1250.0));
-        mvc.perform(get("/api/v1/public/services/wash?sizeClass=SEDAN")).andExpect(status().isOk()).andExpect(jsonPath("$.price").value(1250.0));
+        mvc.perform(put("/api/v1/admin/services/"+serviceId+"/prices/SUV").header("Authorization","Bearer "+adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"price\":2500.00}"))
+            .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/public/services/wash")).andExpect(status().isOk()).andExpect(jsonPath("$.price").value((Object)null))
+            .andExpect(jsonPath("$.prices.length()").value(2)).andExpect(jsonPath("$.prices[0].sizeClass").value("SMALL")).andExpect(jsonPath("$.fromPrice").value(1250.0));
+        mvc.perform(get("/api/v1/public/services?category=test-"+unique)).andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].prices.length()").value(2)).andExpect(jsonPath("$.content[0].fromPrice").value(1250.0));
+        mvc.perform(get("/api/v1/public/services/wash?sizeClass=SMALL")).andExpect(status().isOk()).andExpect(jsonPath("$.price").value(1250.0));
+        mvc.perform(get("/api/v1/public/vehicle-size-classes")).andExpect(status().isOk()).andExpect(jsonPath("$[0].sizeClass").value("SMALL"));
+        mvc.perform(get("/api/v1/public/services/wash?sizeClass=SEDAN")).andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/admin/services/"+serviceId+"/prices/SEDAN").header("Authorization","Bearer "+adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"price\":1250.00}"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test void publicServicesWithoutConfiguredPricesReturnEmptyPriceListAndNullFromPrice() throws Exception {
+        mvc.perform(get("/api/v1/public/services/exterior-wash-and-wax")).andExpect(status().isOk())
+            .andExpect(jsonPath("$.prices").isEmpty()).andExpect(jsonPath("$.fromPrice").value((Object)null));
+        mvc.perform(get("/api/v1/public/services?category=detailing")).andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].prices").isEmpty()).andExpect(jsonPath("$.content[0].fromPrice").value((Object)null));
+    }
+    @Test void publicOffersReturnServerCalculatedDiscountedPricesForEveryConfiguredSize() throws Exception {
+        String serviceId=jdbc.queryForObject("select id::text from services where slug='exterior-wash-and-wax'",String.class);
+        jdbc.update("insert into service_prices(id,service_id,vehicle_size_class,price) values(gen_random_uuid(),?::uuid,'SMALL',1000),(gen_random_uuid(),?::uuid,'SUV',2000)",serviceId,serviceId);
+        String body="{\"title\":\"Wash discount\",\"discountType\":\"PERCENT\",\"discountValue\":10,\"validFrom\":\"2026-01-01\",\"validTo\":\"2026-12-31\",\"appliesToAll\":false,\"active\":true,\"serviceIds\":[\""+serviceId+"\"]}";
+        mvc.perform(post("/api/v1/admin/offers").header("Authorization","Bearer "+adminToken).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isCreated());
+        mvc.perform(get("/api/v1/public/offers")).andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].prices.length()").value(2))
+            .andExpect(jsonPath("$[0].prices[0].price").value(900.0))
+            .andExpect(jsonPath("$[0].prices[1].price").value(1800.0));
     }
     @Test void adminValidationAndAuthorizationAreEnforced() throws Exception {
         mvc.perform(get("/api/v1/admin/categories")).andExpect(status().isUnauthorized());

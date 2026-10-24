@@ -9,5 +9,6 @@ import java.util.UUID;
 public final class OfferModels {
     private OfferModels() {}
     public record OfferRequest(@NotBlank @Size(max=180) String title,@Size(max=2000) String description,@NotNull DiscountType discountType,@NotNull @DecimalMin("0") BigDecimal discountValue,@NotNull LocalDate validFrom,@NotNull LocalDate validTo,@NotNull Boolean appliesToAll,@NotNull Boolean active,@NotNull Set<UUID> serviceIds) {}
-    public record OfferResponse(UUID id,String title,String description,DiscountType discountType,BigDecimal discountValue,LocalDate validFrom,LocalDate validTo,boolean appliesToAll,boolean active,Set<UUID> serviceIds) {}
+    public record OfferPrice(UUID serviceId,String serviceName,String sizeClass,BigDecimal price) {}
+    public record OfferResponse(UUID id,String title,String description,DiscountType discountType,BigDecimal discountValue,LocalDate validFrom,LocalDate validTo,boolean appliesToAll,boolean active,Set<UUID> serviceIds,java.util.List<OfferPrice> prices) {}
 }

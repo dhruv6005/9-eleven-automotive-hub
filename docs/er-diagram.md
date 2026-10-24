@@ -238,4 +238,4 @@ erDiagram
 
 ## Phase 3 catalog schema
 
-Flyway V3 adds unique slugs, `sort_order`, and category/service image and service short-benefit fields. It seeds eight active service categories and 24 services. No service price rows are seeded; prices are entered by an administrator for each vehicle size class.
+Flyway V3 adds unique slugs, `sort_order`, and category/service image and service short-benefit fields. It seeds eight active service categories and 24 services. No service price rows are seeded; prices are entered by an administrator for each vehicle size class. Flyway V4 constrains `service_prices.vehicle_size_class` and nullable `vehicles.size_class` to SMALL, MEDIUM, LARGE, or SUV only when the existing data in that column satisfies the constraint. The backend uses the `VehicleSizeClass` enum for service-price input validation.

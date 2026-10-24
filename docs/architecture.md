@@ -1,6 +1,6 @@
 # Architecture — 9-Eleven Automotive Hub
 
-## Phase 1 and Phase 2 architecture
+## Phase 1–3 architecture
 
 ```mermaid
 flowchart LR
@@ -17,6 +17,8 @@ flowchart LR
 ```
 
 The Phase 1 foundation provides the schema, public shell, status API, error contract, and operational wiring. Phase 2 adds stateless Spring Security resource-server authentication, JWT access tokens, refresh rotation, email verification and reset, customer profile access, and role-guarded Angular shells. The domain workflows and other portal features remain in their assigned phases.
+
+Phase 3 adds catalog category, service, service-price, and offer APIs. Service prices use the shared `VehicleSizeClass` enum. Public service DTOs include configured price rows ordered by size class and the minimum configured `fromPrice`; the legacy `price` field is populated only when a request explicitly supplies `sizeClass`. Public offers contain server-calculated discounted prices for each applicable service and configured size, using the existing offer-pricing helper. The Angular catalog consumes the size-class endpoint for selectors and the admin price grid.
 
 ## Backend conventions
 
@@ -38,10 +40,10 @@ The Phase 1 foundation provides the schema, public shell, status API, error cont
 - Angular standalone components and lazy-loaded feature routes.
 - `core/` is reserved for API/auth infrastructure; `shared/` is reserved for reusable UI components; `features/` separates public, customer and admin capabilities.
 - Tailwind CSS uses the workshop palette: yellow `#FFD400`, charcoal `#151719`, and neutral grey/white.
-- `/admin` and `/portal` use role-guarded Phase 2 shells; their business screens are not implemented yet.
+- `/admin` and `/portal` use role-guarded shells. The admin shell includes Phase 3 catalog management; customer vehicle and job workflows remain unimplemented.
 - The access token is held in memory. The HTTP interceptor sends it as a bearer token, attempts one refresh after a 401, then retries the failed request once. The refresh cookie is never exposed to JavaScript.
 - Angular development proxies `/api` to the local backend. Compose serves web and API through same-origin Nginx routing.
 
 ## Security boundary
 
-Authentication is now implemented, but the product is not yet a production-ready workshop system. Catalog, job ownership workflows, operational screens, media, billing, and notifications remain unimplemented. Refresh cookies use `Secure`, `HttpOnly`, `SameSite=Strict`, and the `/api/v1/auth` path. CORS allows only the configured `FRONTEND_ORIGIN`. Change all local secrets and credentials and use managed secret storage before public deployment. The current Bucket4j limiter is process-local; horizontally scaled deployments need a shared bucket store and trusted-proxy/IP handling.
+Phases 1–3 are implemented, but the product is not yet a production-ready workshop system. Job ownership workflows, media, billing, and notifications remain unimplemented. Flyway V4 adds size-class checks to existing pricing and vehicle data only when the respective data is valid; invalid legacy values are preserved and the corresponding check is skipped. Refresh cookies use `Secure`, `HttpOnly`, `SameSite=Strict`, and the `/api/v1/auth` path. CORS allows only the configured `FRONTEND_ORIGIN`. Change all local secrets and credentials and use managed secret storage before public deployment. The current Bucket4j limiter is process-local; horizontally scaled deployments need a shared bucket store and trusted-proxy/IP handling.

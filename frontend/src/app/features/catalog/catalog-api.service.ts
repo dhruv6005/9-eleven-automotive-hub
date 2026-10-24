@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../core/api-paths';
-import { Category, CategoryRequest, Offer, OfferRequest, Page, Service, ServicePrice, ServiceRequest } from './catalog.models';
+import { Category, CategoryRequest, Offer, OfferRequest, Page, Service, ServicePrice, ServiceRequest, VehicleSizeOption } from './catalog.models';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogApiService {
@@ -16,6 +16,7 @@ export class CatalogApiService {
   }
   service(slug: string): Promise<Service> { return firstValueFrom(this.http.get<Service>(`${this.root}/public/services/${encodeURIComponent(slug)}`)); }
   publicOffers(): Promise<Offer[]> { return firstValueFrom(this.http.get<Offer[]>(`${this.root}/public/offers`)); }
+  vehicleSizeClasses(): Promise<VehicleSizeOption[]> { return firstValueFrom(this.http.get<VehicleSizeOption[]>(`${this.root}/public/vehicle-size-classes`)); }
   adminCategories(): Promise<Category[]> { return firstValueFrom(this.http.get<Category[]>(`${this.root}/admin/categories`)); }
   saveCategory(id: string | null, body: CategoryRequest): Promise<Category> { return firstValueFrom(id ? this.http.put<Category>(`${this.root}/admin/categories/${id}`, body) : this.http.post<Category>(`${this.root}/admin/categories`, body)); }
   hideCategory(id: string): Promise<void> { return firstValueFrom(this.http.delete<void>(`${this.root}/admin/categories/${id}`)); }

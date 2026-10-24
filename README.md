@@ -1,6 +1,6 @@
 # 9-Eleven Automotive Hub
 
-Phase 1 foundation and Phase 2 authentication for a premium automotive detailing and workshop platform. The monorepo contains a Java 21 / Spring Boot API, Angular 21 frontend, PostgreSQL 16, Flyway migrations, Docker Compose, and GitHub Actions CI.
+Phases 1–3 foundation, authentication, and catalog for a premium automotive detailing and workshop platform. The monorepo contains a Java 21 / Spring Boot API, Angular 21 frontend, PostgreSQL 16, Flyway migrations, Docker Compose, and GitHub Actions CI.
 
 ## Quick start
 
@@ -32,15 +32,15 @@ Stop the stack with `docker compose down`. Do not use `docker compose down -v` u
 - Run the Angular application from `frontend` using `npm install` then `npm start`; the development server proxies `/api` to the local API.
 - For verification, run `./mvnw verify` from `backend`, then `npm run build` and `npm test` from `frontend`. Auth integration tests use Testcontainers and need Docker.
 
-## Phase 1 and Phase 2 scope
+## Phase 1–3 scope
 
-Included: the Phase 1 monorepo, API, foundational schema, status endpoint, errors, OpenAPI, public site, and Compose/CI setup; plus Phase 2 customer registration/email verification, login/logout, JWT access and rotating refresh tokens, password recovery and forced initial-admin password change, lockout/rate limits, customer profile GET/PUT, role-protected admin/customer shells, and an environment-configured first-admin seed.
+Included: the Phase 1 foundation and Compose/CI setup; Phase 2 authentication, customer profile, and role-protected shells; and Phase 3 catalog categories, services, size-class pricing, offers, public service/offer pages, and admin catalog management. Public service responses include ordered per-size prices and the lowest configured `fromPrice`; offers include server-calculated discounted prices per eligible service and size. The supported classes are provided by `GET /api/v1/public/vehicle-size-classes`.
 
-Not yet implemented: catalog workflows, customer vehicle management, job lifecycle commands and tracking, operational notifications, upload storage, billing workflows, live events, dashboards, and production deployment. Those are reserved for their later phases.
+Not yet implemented: customer vehicle management, job lifecycle commands and tracking, operational notifications, upload storage, billing workflows, live events, dashboards, and production deployment. Those are reserved for their later phases.
 
 ## Environment configuration
 
-`.env.example` contains local-only values. Change credentials and supply proper secret management before deploying anywhere public. `APP_JWT_SECRET` is required and must be at least 32 bytes. The `prod` Spring profile requires database environment variables and keeps Hibernate DDL generation in `validate` mode; Flyway owns schema changes. Configure both admin seed variables together or leave both blank. `docker compose --profile mail up --build` runs the development MailHog SMTP capture service.
+`.env.example` contains local-only values; Phase 3 adds no environment variables. Change credentials and supply proper secret management before deploying anywhere public. `APP_JWT_SECRET` is required and must be at least 32 bytes. The `prod` Spring profile requires database environment variables and keeps Hibernate DDL generation in `validate` mode; Flyway applies schema changes, including the V4 size-class constraints when existing values are valid. Configure both admin seed variables together or leave both blank. `docker compose --profile mail up --build` runs the development MailHog SMTP capture service. After startup, configure real service prices in Admin → Services → Prices before expecting public price values.
 
 ## API basics
 
@@ -56,4 +56,4 @@ Every API response includes an `X-Correlation-Id` response header. Send a safe `
 
 ## Project documents
 
-See `docs/architecture.md`, `docs/er-diagram.md`, `docs/runbook.md`, and `docs/phase-2-status.md`. The complete target product plan is in `Car Detailing Workshop – Full Project Prompt.docx`.
+See `docs/architecture.md`, `docs/er-diagram.md`, `docs/runbook.md`, `docs/phase-2-status.md`, and the Phase 3 status/follow-up docs. The complete target product plan is in `Car Detailing Workshop – Full Project Prompt.docx`.
