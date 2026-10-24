@@ -34,4 +34,12 @@ describe('roleGuard', () => {
     expect(result).not.toBe(true);
     expect(auth.homeForRole).toHaveBeenCalledOnce();
   });
+
+  it('redirects an admin away from the customer portal', () => {
+    const auth = { role: signal<'CUSTOMER' | 'ADMIN' | null>('ADMIN'), homeForRole: vi.fn(() => '/admin') };
+    TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: auth }, provideRouter([])] });
+    const result = TestBed.runInInjectionContext(() => roleGuard({ data: { role: 'CUSTOMER' } } as unknown as ActivatedRouteSnapshot, {} as RouterStateSnapshot));
+    expect(result).not.toBe(true);
+    expect(auth.homeForRole).toHaveBeenCalledOnce();
+  });
 });
