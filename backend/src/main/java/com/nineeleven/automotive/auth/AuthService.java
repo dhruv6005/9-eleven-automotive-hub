@@ -136,6 +136,19 @@ public class AuthService {
     }
 
     @Transactional
+    public void inviteCustomer(UserEntity user, String emailInput) {
+        String email=normalize(emailInput);
+        if(users.existsByEmailIgnoreCaseAndDeletedAtIsNull(email) && !email.equalsIgnoreCase(user.getEmail()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"An account with this email already exists.");
+        user.setEmail(email); user.setEmailVerified(true); user.setStatus(UserAccountStatus.NO_LOGIN);
+        resetTokens.consumeAllForUser(user.getId());
+        String raw=newOpaqueToken(); PasswordResetTokenEntity token=new PasswordResetTokenEntity();
+        token.setId(UUID.randomUUID()); token.setUser(user); token.setTokenHash(hash(raw));
+        token.setExpiresAt(Instant.now().plus(30,ChronoUnit.MINUTES)); token.setCreatedAt(Instant.now()); resetTokens.save(token);
+        mail.sendSetPassword(email,raw);
+    }
+
+    @Transactional
     public void resetPassword(AuthModels.ResetPasswordRequest request) {
         policy.requireValid(request.password());
         PasswordResetTokenEntity token = resetTokens.findByTokenHashWithUser(hash(request.token()))
@@ -145,6 +158,7 @@ public class AuthService {
                 org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid or expired reset link.");
         UserEntity user = token.getUser();
         token.setConsumedAt(now); user.setPasswordHash(passwords.encode(request.password()));
+        if(user.getStatus()==UserAccountStatus.NO_LOGIN) user.setStatus(UserAccountStatus.ACTIVE);
         user.setFailedLoginAttempts(0); user.setLockedUntil(null); user.setForcePasswordChange(false);
         resetTokens.consumeAllForUser(user.getId());
         refreshTokens.revokeAllForUser(user.getId()); audit(user.getId(), "PASSWORD_RESET");

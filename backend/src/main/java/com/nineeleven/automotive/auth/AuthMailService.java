@@ -23,6 +23,10 @@ public class AuthMailService {
         send(email, "Reset your 9-Eleven password", "Reset your password: " + frontendUrl
                 + "/reset-password?token=" + token + "\n\nThis link expires in 30 minutes.");
     }
+    public void sendSetPassword(String email, String token) {
+        send(email, "Set your 9-Eleven account password", "Set your password: " + frontendUrl
+                + "/reset-password?token=" + token + "\n\nThis link expires in 30 minutes.");
+    }
     private void send(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from); message.setTo(to); message.setSubject(subject); message.setText(body);

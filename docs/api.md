@@ -1,4 +1,4 @@
-# API reference — Phases 1 to 3
+# API reference — Phases 1 to 4
 
 The versioned REST API is rooted at `/api/v1`. The published interactive reference becomes available at `/swagger-ui.html`; the raw OpenAPI document is `/api-docs`.
 
@@ -69,6 +69,22 @@ The refresh cookie is named `refresh_token`, has `HttpOnly`, `Secure`, and `Same
 
 Account lockout begins after five failed login attempts and lasts 15 minutes. Auth routes share a process-local limit of 30 requests per minute per client IP. In Compose, the API honors a single literal `X-Forwarded-For` address only when the request's socket peer is the configured Nginx proxy; Nginx replaces caller-supplied forwarding headers. Direct clients cannot choose their rate-limit key by supplying that header. This limiter is intended for the current single-instance development setup.
 
-## Planned API modules
+## Customers and vehicles (Phase 4)
 
-Enquiries, customer vehicle/job routes, approvals, invoices, media, and notification endpoints will be introduced in their assigned phases.
+Admin customer create/update accepts `{ "name", "phone", "email"?, "address"?, "notes"? }`. Email changes use the invite endpoint. Phone values are normalized and duplicate customer phones return 409. Customers created without email use `NO_LOGIN`; invitation sends a single-use, 30-minute set-password link and password completion activates the account.
+
+| Method | Path | Access | Behavior |
+|---|---|---|---|
+| `POST` | `/api/v1/admin/customers` | ADMIN | Create a CUSTOMER profile. |
+| `GET` | `/api/v1/admin/customers?search=&status=&page=0&size=20` | ADMIN | Paginated search by name, phone, email, or vehicle registration and optional status. |
+| `GET`, `PUT` | `/api/v1/admin/customers/{id}` | ADMIN | Read profile with vehicles / update profile and phone. |
+| `POST` | `/api/v1/admin/customers/{id}/invite` | ADMIN | Add/confirm email and send a set-password link. |
+| `GET`, `POST` | `/api/v1/me/vehicles` | CUSTOMER | List or create the authenticated customer's vehicles. |
+| `GET`, `PUT`, `DELETE` | `/api/v1/me/vehicles/{id}` | CUSTOMER | Read/update/soft-delete an owned vehicle. Wrong-owner IDs return 404. |
+| `GET`, `POST` | `/api/v1/admin/customers/{customerId}/vehicles` | ADMIN | List or create vehicles for a customer. |
+| `GET`, `PUT`, `DELETE` | `/api/v1/admin/customers/{customerId}/vehicles/{id}` | ADMIN | Read/update/soft-delete a vehicle scoped to that customer. |
+| `GET` | `/api/v1/admin/vehicles?search=` | ADMIN | Paginated registration-number lookup. |
+
+Vehicle requests use `make`, `model`, optional `variant`, `year`, `color`, `vin`, required enum `sizeClass`, and `regNumber`. Registrations are uppercased and spaces/hyphens removed; duplicate active registrations return 409. Deletion sets `deleted_at`, preserving job references. Admin writes are recorded in `audit_log`. Anonymous requests receive 401; non-admin admin-route requests receive 403; ADMIN requests to `/me/**` receive 403 under the existing CUSTOMER-only rule.
+
+Enquiries, jobs, approvals, invoices, media, and notifications remain planned for later phases.

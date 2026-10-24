@@ -32,7 +32,7 @@ erDiagram
 
     USERS {
         uuid id PK
-        string email UK
+        string email UK "nullable; unique when present"
         string phone
         string password_hash
         string role
@@ -224,6 +224,10 @@ erDiagram
         datetime created_at
     }
 ```
+
+## Phase 4 schema
+
+Flyway V5 makes `users.email` nullable and retains case-insensitive uniqueness for non-null emails. Admin-created customer accounts use status `NO_LOGIN` until the set-password link is completed. Customer and vehicle records use the existing profile and vehicle tables. Vehicles are soft-deleted through `deleted_at`; registration uniqueness applies to active vehicles.
 
 ## Required indexes included
 

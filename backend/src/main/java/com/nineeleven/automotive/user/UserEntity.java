@@ -11,7 +11,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "users")
 public class UserEntity extends AuditedEntity {
-    @Column(nullable = false, length = 320)
+    @Column(length = 320)
     private String email;
     @Column(length = 30)
     private String phone;
