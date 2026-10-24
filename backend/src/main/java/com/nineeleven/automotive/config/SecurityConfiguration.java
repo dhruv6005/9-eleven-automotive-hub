@@ -56,7 +56,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/change-password").authenticated()
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/system/status", "/actuator/health/**",
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/public/**", "/api/v1/system/status", "/actuator/health/**",
                                 "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/me/**").hasRole("CUSTOMER")

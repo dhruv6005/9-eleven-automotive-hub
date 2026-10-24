@@ -59,12 +59,20 @@ erDiagram
     SERVICE_CATEGORIES {
         uuid id PK
         string name
+        string slug UK
         boolean active
+        int sort_order
+        text description
+        text image_url
     }
     SERVICES {
         uuid id PK
         uuid category_id FK
         string name
+        string slug UK
+        text description
+        string short_benefit
+        text image_url
         decimal base_duration_hours
         boolean active
     }
@@ -227,3 +235,7 @@ erDiagram
 - Refresh tokens are indexed by user/expiry and family; each bearer token is stored as a SHA-256 hash, with rotation/revocation state and replacement linkage.
 - Password reset and email verification token hashes are unique and indexed by user/expiry.
 - Supporting indexes cover job queues, service catalog lookups, customer notifications, enquiry triage, invoice lines and audit history.
+
+## Phase 3 catalog schema
+
+Flyway V3 adds unique slugs, `sort_order`, and category/service image and service short-benefit fields. It seeds eight active service categories and 24 services. No service price rows are seeded; prices are entered by an administrator for each vehicle size class.
